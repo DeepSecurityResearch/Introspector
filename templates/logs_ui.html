@@ -86,6 +86,15 @@
     }
     .btn-small:hover{background:rgba(42,168,255,.22);border-color:rgba(42,168,255,.45)}
     .btn-small:active{transform:translateY(1px)}
+
+    /* Nav tabs */
+    .nav-tabs{display:flex;gap:4px;align-items:center}
+    .nav-tab{
+      padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;
+      color:var(--text-soft);text-decoration:none;transition:all .15s ease
+    }
+    .nav-tab:hover{background:rgba(42,168,255,.12);color:var(--text)}
+    .nav-tab.active{background:rgba(42,168,255,.2);color:var(--text);border:1px solid rgba(42,168,255,.35)}
     .btn-small[disabled]{opacity:.45;cursor:default;box-shadow:none}
 
     .view-toggle{
@@ -347,6 +356,10 @@
         <div class="topbar-title">HTTP Ops - Web Console</div>
       </div>
       <div class="topbar-right">
+        <div class="nav-tabs">
+          <a href="/{{ log_path }}" class="nav-tab active">📡 Logs</a>
+          <a href="/ResponseDesigner" class="nav-tab">🎨 Response Designer</a>
+        </div>
         <div class="host-box">
           <span class="host-text" id="cbHostText"></span>
           <button class="copy-btn" onclick="copyCallbackHost()">Copy</button>

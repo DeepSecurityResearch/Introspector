@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Response Designer – Introspector Framework</title>
+  <style>
+    :root {
+      --bg:#05030a;
+      --bg-alt:#0f0a1a;
+      --panel:#120c22;
+      --accent:#2aa8ff;
+      --accent-soft:rgba(42,168,255,0.22);
+      --text:#f9fafb;
+      --text-soft:#9ca3af;
+      --border:#1f2933;
+      --muted:#6b7280;
+      --chip:#0b1422;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:radial-gradient(circle at top,#0b1b2f 0,#05030a 55%,#020013 100%);
+      color:var(--text);
+      height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .app{display:flex;flex-direction:column;flex:1;min-width:0}
+    .topbar{
+      padding:12px 20px;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(to right,rgba(42,168,255,0.12),transparent);
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+    }
+    .topbar-left{display:flex;flex-direction:column;gap:2px}
+    .topbar-title{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:var(--text-soft)}
+    .topbar-main{font-size:18px;font-weight:650}
+    .topbar-right{display:flex;align-items:center;gap:10px;min-width:0}
+    .topbar-pill{
+      padding:4px 10px;border-radius:999px;border:1px solid var(--accent-soft);
+      color:var(--text-soft);font-size:11px;display:inline-flex;align-items:center;gap:6px;
+      background:rgba(15,23,42,.72)
+    }
+    .pill-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e}
+    .host-box{
+      display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;
+      border:1px solid var(--border);background:rgba(15,23,42,.75);font-size:11px;color:var(--text-soft);
+    }
+    .nav-tabs{display:flex;gap:4px;align-items:center}
+    .nav-tab{
+      padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;
+      color:var(--text-soft);text-decoration:none;transition:all .15s ease
+    }
+    .nav-tab:hover{background:rgba(42,168,255,.12);color:var(--text)}
+    .nav-tab.active{background:rgba(42,168,255,.2);color:var(--text);border:1px solid rgba(42,168,255,.35)}
+      max-width:360px;min-width:0
+    }
+    .host-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+    .layout{display:grid;grid-template-columns:340px minmax(0,1fr);flex:1;min-height:0}
+    .sidebar{
+      border-right:1px solid var(--border);
+      background:radial-gradient(circle at top left,#0a2542 0,#05030a 60%);
+      display:flex;flex-direction:column;min-height:0
+    }
+    .sidebar-header{
+      padding:12px 14px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+      font-size:13px;color:var(--text-soft)
+    }
+    .sidebar-left{
+      display:flex;align-items:center;gap:10px;min-width:0;
+    }
+    .sidebar-right{
+      display:flex;gap:8px;align-items:center;flex-shrink:0;
+    }
+    .tag{
+      padding:2px 8px;border-radius:999px;background:rgba(15,23,42,.7);
+      border:1px solid var(--border);font-size:11px;color:var(--muted);
+      white-space:nowrap;
+    }
+    .btn-small{
+      border-radius:999px;border:1px solid rgba(42,168,255,.28);background:rgba(42,168,255,.14);
+      padding:5px 12px;font-size:11px;font-weight:650;color:var(--text);cursor:pointer;
+      transition:background .15s ease,border-color .15s ease,transform .05s ease;
+      box-shadow:0 6px 18px rgba(0,0,0,.25)
+    }
+    .btn-small:hover{background:rgba(42,168,255,.22);border-color:rgba(42,168,255,.45)}
+    .btn-small:active{transform:translateY(1px)}
+    .btn-small[disabled]{opacity:.45;cursor:default;box-shadow:none}
+
+    .response-list{flex:1;overflow-y:auto;padding:6px}
+    .response-item{
+      border-radius:10px;padding:12px;margin-bottom:8px;
+      background:rgba(15,23,42,.65);border:1px solid transparent;cursor:pointer;
+      display:flex;flex-direction:column;gap:8px
+    }
+    .response-item:hover{border-color:var(--accent-soft);background:rgba(15,23,42,.9)}
+    .response-item.active{
+      border-color:var(--accent);box-shadow:0 0 0 1px rgba(42,168,255,.26);
+      background:linear-gradient(135deg,rgba(42,168,255,.12),rgba(15,23,42,.92))
+    }
+    .response-header{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+    .response-path{
+      font-size:14px;color:var(--text);font-weight:600;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1
+    }
+    .response-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .response-actions{display:flex;gap:4px;margin-top:4px}
+    .btn-action{
+      padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;
+      border:1px solid transparent;background:transparent;color:var(--text-soft);
+      transition:all .15s ease
+    }
+    .btn-action:hover{background:rgba(42,168,255,.15);color:var(--accent)}
+    .btn-action.delete:hover{background:rgba(248,113,113,.15);color:#f87373}
+
+    .main{
+      display:flex;flex-direction:column;flex:1;min-height:0;background:var(--panel)
+    }
+    .main-header{
+      padding:16px 20px;border-bottom:1px solid var(--border);
+      background:linear-gradient(to right,rgba(42,168,255,.08),transparent)
+    }
+    .main-title{font-size:16px;font-weight:650;color:var(--text)}
+    .main-subtitle{font-size:12px;color:var(--text-soft);margin-top:2px}
+    .main-content{
+      flex:1;overflow-y:auto;padding:20px;
+      display:flex;flex-direction:column;
+      gap:16px
+    }
+    .empty-state{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      flex:1;color:var(--muted);text-align:center;padding:40px
+    }
+    .empty-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+    .empty-title{font-size:16px;font-weight:600;margin-bottom:8px}
+    .empty-text{font-size:13px;max-width:300px;line-height:1.4}
+
+    /* Form */
+    .response-form{
+      display:flex;flex-direction:column;gap:16px;
+    }
+    .form-group{
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .form-label{
+      font-size:12px;
+      font-weight:600;
+      color:var(--text-soft);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .form-input{
+      padding:10px 12px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.75);
+      color:var(--text);
+      border-radius:6px;
+      font-size:14px;
+      font-family:inherit;
+      transition:border-color .15s ease,background .15s ease;
+    }
+    .form-input:focus{
+      outline:none;
+      border-color:var(--accent);
+      background:rgba(15,23,42,.85);
+      box-shadow:0 0 0 3px rgba(42,168,255,.1);
+    }
+    .form-textarea.small{
+      min-height:100px;
+    }
+    .form-textarea{
+      min-height:200px;
+      resize:vertical;
+      font-family:'Monaco','Menlo','Ubuntu Mono',monospace;
+      font-size:12px;
+      line-height:1.4;
+    }
+    .form-select{
+      padding:10px 12px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.75);
+      color:var(--text);
+      border-radius:6px;
+      font-size:14px;
+      font-family:inherit;
+      transition:border-color .15s ease,background .15s ease;
+      cursor:pointer;
+    }
+    .form-select:focus{
+      outline:none;
+      border-color:var(--accent);
+      background:rgba(15,23,42,.85);
+      box-shadow:0 0 0 3px rgba(42,168,255,.1);
+    }
+    .form-select option{
+      background:var(--panel);
+      color:var(--text);
+    }
+    .form-actions{
+      display:flex;
+      gap:10px;
+      margin-top:8px;
+    }
+    .btn{
+      padding:8px 16px;
+      border-radius:6px;
+      border:1px solid;
+      font-size:13px;
+      font-weight:500;
+      cursor:pointer;
+      transition:all .15s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .btn-primary{
+      background:var(--accent);
+      border-color:var(--accent);
+      color:white;
+    }
+    .btn-primary:hover{
+      background:rgba(42,168,255,.85);
+      border-color:rgba(42,168,255,.85);
+      transform:translateY(-1px);
+      box-shadow:0 4px 12px rgba(42,168,255,.25);
+    }
+    .btn-secondary{
+      background:transparent;
+      border-color:var(--border);
+      color:var(--text-soft);
+    }
+    .btn-secondary:hover{
+      background:rgba(15,23,42,.5);
+      color:var(--text);
+      border-color:var(--muted);
+    }
+
+    /* Preview */
+    .response-preview{
+      margin-top:16px;
+      padding:12px;
+      background:rgba(0,0,0,.3);
+      border-radius:6px;
+      border:1px solid var(--border);
+      font-family:'Monaco','Menlo','Ubuntu Mono',monospace;
+      font-size:11px;
+      line-height:1.4;
+      color:var(--text-soft);
+      white-space:pre-wrap;
+      word-break:break-all;
+      max-height:200px;
+      overflow-y:auto;
+    }
+    .preview-header{
+      font-size:10px;
+      color:var(--muted);
+      margin-bottom:8px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">Response Designer</div>
+        <div class="topbar-main">HTTP Response Builder</div>
+      </div>
+      <div class="topbar-right">
+        <div class="nav-tabs">
+          <a href="/{{ log_path }}" class="nav-tab">📡 Logs</a>
+          <a href="/ResponseDesigner" class="nav-tab active">🎨 Response Designer</a>
+        </div>
+        <div class="topbar-pill">
+          <span class="pill-dot"></span>
+          <span>Designer Active</span>
+        </div>
+        <div class="host-box">
+          <span class="host-text">Response Designer v1.0</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-left">
+            <span>Response Designer</span>
+            <span class="tag" id="responseCount">0 responses</span>
+          </div>
+          <div class="sidebar-right">
+            <button class="btn-small" onclick="addNewResponse()">+ New Response</button>
+            <button class="btn-small" onclick="listActiveResponses()">📋 List</button>
+          </div>
+        </div>
+        <div class="response-list" id="responseList">
+          <!-- Response items will be dynamically added here -->
+        </div>
+      </aside>
+
+      <section class="main">
+        <div class="main-header">
+          <div class="main-title" id="mainTitle">Select a Response</div>
+          <div class="main-subtitle" id="mainSubtitle">Choose a response from left panel to edit</div>
+        </div>
+        <div class="main-content" id="mainContent">
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No Response Selected</div>
+            <div class="empty-text">Create a new response or select an existing one from left panel</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let responseCounter = 0;
+    let activeResponseId = null;
+    const responses = new Map();
+
+    function generateResponseId() {
+      return `response-${++responseCounter}`;
+    }
+
+    function createResponse(name = 'New Response') {
+      const responseId = generateResponseId();
+      const response = {
+        id: responseId,
+        name: name,
+        path: '',
+        headers: `HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nServer: Introspector/1.0\r\nConnection: close\r\n\r\n`,
+        body: '<!DOCTYPE html>\n<html>\n<head>\n  <title>Custom Response</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n  <p>This is a custom response.</p>\n</body>\n</html>',
+        createdAt: new Date().toISOString()
+      };
+      
+      responses.set(responseId, response);
+      return response;
+    }
+
+    function renderResponseList() {
+      const responseList = document.getElementById('responseList');
+      const responseCount = document.getElementById('responseCount');
+      
+      responseList.innerHTML = '';
+      responseCount.textContent = `${responses.size} response${responses.size !== 1 ? 's' : ''}`;
+      
+      responses.forEach((response) => {
+        const responseItem = document.createElement('div');
+        responseItem.className = `response-item ${response.id === activeResponseId ? 'active' : ''}`;
+        responseItem.onclick = () => selectResponse(response.id);
+        
+        const displayName = response.name || 'Untitled Response';
+        const displayPath = response.path || '/path-not-set';
+        const createdAt = new Date(response.createdAt).toLocaleTimeString();
+        
+        responseItem.innerHTML = `
+          <div class="response-header">
+            <div class="response-path" title="${displayName}">${displayName}</div>
+          </div>
+          <div class="response-meta">
+            <span>📍 ${displayPath}</span>
+            <span>🕐 ${createdAt}</span>
+          </div>
+          <div class="response-actions">
+            <button class="btn-action delete" onclick="deleteResponse(event, '${response.id}')">🗑️</button>
+          </div>
+        `;
+        
+        responseList.appendChild(responseItem);
+      });
+    }
+
+    function selectResponse(responseId) {
+      if (!responses.has(responseId)) return;
+      
+      activeResponseId = responseId;
+      renderResponseList();
+      renderResponseForm();
+    }
+
+    function renderResponseForm() {
+      const mainTitle = document.getElementById('mainTitle');
+      const mainSubtitle = document.getElementById('mainSubtitle');
+      const mainContent = document.getElementById('mainContent');
+      
+      if (!activeResponseId || !responses.has(activeResponseId)) {
+        mainTitle.textContent = 'Select a Response';
+        mainSubtitle.textContent = 'Choose a response from left panel to edit';
+        mainContent.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No Response Selected</div>
+            <div class="empty-text">Create a new response or select an existing one from left panel</div>
+          </div>
+        `;
+        return;
+      }
+      
+      const response = responses.get(activeResponseId);
+      
+      mainTitle.textContent = response.name || 'Untitled Response';
+      mainSubtitle.textContent = response.path || 'Path not set';
+      
+      mainContent.innerHTML = `
+        <div class="response-form">
+          <div class="form-group">
+            <label class="form-label">Response Name</label>
+            <input type="text" 
+                   class="form-input" 
+                   placeholder="Response Name" 
+                   value="${response.name || ''}"
+                   onchange="updateResponse('${response.id}', 'name', this.value)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Response Path URL</label>
+            <input type="text" 
+                   class="form-input" 
+                   placeholder="/controledpayload.html" 
+                   value="${response.path || ''}"
+                   onchange="updateResponse('${response.id}', 'path', this.value)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Template Preset</label>
+            <select class="form-select" onchange="applyTemplate('${response.id}', this.value)">
+              <option value="">Select a template...</option>
+              <option value="svg-xss">SVG XSS</option>
+              <option value="js-cookie-receiver">Javascript Cookie Receiver</option>
+              <option value="local-ip-obtain">Local IP Obtain</option>
+              <option value="xss-csv">XSS via CSV</option>
+              <option value="iframe-local-file">Iframe with Local File Loader</option>
+              <option value="xxe-xml">XXE XML Payload</option>
+              <option value="css-exfiltration">CSS Data Exfiltration</option>
+              <option value="jsonp-callback">JSONP Callback</option>
+              <option value="ssti-payload">Server-Side Template Injection</option>
+              <option value="blind-ssrf">Blind SSRF Callback</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Response Headers</label>
+            <textarea id="headers-${response.id}" class="form-input form-textarea small" 
+                      placeholder="HTTP/1.1 200 OK&#10;Content-Type: text/html&#10;Server: Introspector/1.0&#10;Connection: close&#10;&#10;"
+                      onchange="updateResponse('${response.id}', 'headers', this.value)">${response.headers || ''}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Response Body</label>
+            <textarea id="body-${response.id}" class="form-input form-textarea" 
+                      placeholder="&lt;!DOCTYPE html&gt;&#10;&lt;html&gt;&#10;&lt;head&gt;&#10;  &lt;title&gt;Custom Response&lt;/title&gt;&#10;&lt;/head&gt;&#10;&lt;body&gt;&#10;  &lt;h1&gt;Hello World&lt;/h1&gt;&#10;  &lt;p&gt;This is a custom response.&lt;/p&gt;&#10;&lt;/body&gt;&#10;&lt;/html&gt;"
+                      onchange="updateResponse('${response.id}', 'body', this.value)">${response.body || ''}</textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="saveResponse('${response.id}')">
+              💾 Save & Activate Response
+            </button>
+            <button class="btn btn-secondary" onclick="previewResponse('${response.id}')">
+              👁️ Preview
+            </button>
+          </div>
+
+          <div class="response-preview" id="preview-${response.id}" style="display:none;">
+            <div class="preview-header">Response Preview:</div>
+            <div id="preview-content-${response.id}"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateResponse(responseId, field, value) {
+      if (!responses.has(responseId)) return;
+      
+      const response = responses.get(responseId);
+      response[field] = value;
+      
+      if (field === 'name') {
+        // Update the header title immediately
+        const mainTitle = document.getElementById('mainTitle');
+        if (mainTitle && responseId === activeResponseId) {
+          mainTitle.textContent = value || 'Untitled Response';
+        }
+        // Update the list item name
+        renderResponseList();
+      } else if (field === 'path') {
+        // Update the subtitle immediately
+        const mainSubtitle = document.getElementById('mainSubtitle');
+        if (mainSubtitle && responseId === activeResponseId) {
+          mainSubtitle.textContent = value || 'Path not set';
+        }
+        // Update the list item path
+        renderResponseList();
+      }
+    }
+
+    function addNewResponse() {
+      const newResponse = createResponse(`Response ${responses.size + 1}`);
+      selectResponse(newResponse.id);
+    }
+
+    function deleteResponse(event, responseId) {
+      event.stopPropagation();
+      
+      if (!responses.has(responseId)) return;
+      
+      if (confirm('Are you sure you want to delete this response?')) {
+        responses.delete(responseId);
+        
+        if (activeResponseId === responseId) {
+          activeResponseId = responses.size > 0 ? responses.keys().next().value : null;
+        }
+        
+        renderResponseList();
+        renderResponseForm();
+      }
+    }
+
+    async function saveResponse(responseId) {
+      if (!responses.has(responseId)) return;
+      
+      const response = responses.get(responseId);
+      
+      if (!response.path) {
+        alert('Please specify a Response Path URL before saving');
+        return;
+      }
+      
+      try {
+        const result = await fetch('/api/response-designer/save', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            response_id: responseId,
+            name: response.name,
+            path: response.path,
+            headers: response.headers,
+            body: response.body
+          })
+        });
+        
+        const data = await result.json();
+        
+        if (data.success) {
+          alert(`✅ Response saved and available at: ${window.location.origin}${data.url}`);
+          
+          // Optional: update response with saved info
+          response.url = data.url;
+          response.full_path = data.path;
+          
+        } else {
+          alert(`❌ Error saving response: ${data.error || 'Unknown error'}`);
+        }
+        
+      } catch (error) {
+        console.error('Error saving response:', error);
+        alert(`❌ Network error saving response: ${error.message}`);
+      }
+    }
+
+    async function getTemplateData(templateName) {
+      if (!templateName) return {headers: '', body: ''};
+      
+      try {
+        const response = await fetch('/api/response-template/' + templateName);
+        if (response.ok) {
+          return await response.json();
+        } else {
+          return {headers: '', body: ''};
+        }
+      } catch (error) {
+        console.error('Error loading template:', error);
+        return {headers: '', body: ''};
+      }
+    }
+
+    async function applyTemplate(responseId, templateName) {
+      if (!templateName || !responses.has(responseId)) return;
+      
+      const template = await getTemplateData(templateName);
+      const response = responses.get(responseId);
+      
+      response.headers = template.headers || '';
+      response.body = template.body || '';
+      
+      // Update form fields
+      const headersTextarea = document.getElementById(`headers-${responseId}`);
+      const bodyTextarea = document.getElementById(`body-${responseId}`);
+      
+      if (headersTextarea) headersTextarea.value = template.headers || '';
+      if (bodyTextarea) bodyTextarea.value = template.body || '';
+    }
+
+    async function listActiveResponses() {
+      try {
+        const response = await fetch('/api/response-designer/debug');
+        const data = await response.json();
+        
+        if (data.success) {
+          let content = "📋 Active Response Designer Responses:\n\n";
+          
+          for (const [path, info] of Object.entries(data.stored_responses)) {
+            content += `📍 ${path}\n`;
+            content += `   Name: ${info.name}\n`;
+            content += `   Headers: ${info.headers_length} chars\n`;
+            content += `   Body: ${info.body_length} chars\n`;
+            content += `   Updated: ${new Date(info.updated_at).toLocaleString()}\n`;
+            content += `   URL: ${window.location.origin}/${path}\n\n`;
+          }
+          
+          alert(content);
+        } else {
+          alert('Error loading responses: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error loading responses:', error);
+        alert('Network error: ' + error.message);
+      }
+    }
+
+    function previewResponse(responseId) {
+      if (!responses.has(responseId)) return;
+      
+      const response = responses.get(responseId);
+      const previewEl = document.getElementById(`preview-${responseId}`);
+      const contentEl = document.getElementById(`preview-content-${responseId}`);
+      
+      // Combine headers and body for preview
+      const fullResponse = (response.headers || '') + (response.body || '');
+      contentEl.textContent = fullResponse;
+      
+      previewEl.style.display = previewEl.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Initialize app
+    function initializeApp() {
+      // Create initial response if empty
+      if (responses.size === 0) {
+        const firstResponse = createResponse('Response 1');
+        selectResponse(firstResponse.id);
+      } else {
+        renderResponseList();
+        renderResponseForm();
+      }
+    }
+
+    // Start the app
+    initializeApp();
+  </script>
+</body>
+</html>
