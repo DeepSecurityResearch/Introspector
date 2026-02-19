@@ -22,7 +22,7 @@ A ready to use Out-of-Band (OOB) operations framework. Designed to be more than 
 &nbsp;
 
 
-<img align="right" src="https://www.introspector.sh/assets/img/introspector_server_start_carbon.png" width="600" height="380" alt="Introspector">
+<img align="right" src="https://www.introspector.sh/assets/img/introspector_server_start_carbon.png" width="500" height="280" alt="Introspector">
 
 &nbsp;
 
@@ -38,8 +38,6 @@ A ready to use Out-of-Band (OOB) operations framework. Designed to be more than 
 
 
 Screenshots are available in the [Docs](https://introspector.sh/screenshots).
-
-&nbsp;
 
 &nbsp;
 
