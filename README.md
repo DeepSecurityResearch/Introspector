@@ -5,7 +5,7 @@
 
 <div align="center">
 
- Readme: <a href="https://github.com/projectdiscovery/nuclei/blob/main/README.md">`English`</a> / <a href="https://github.com/projectdiscovery/nuclei/blob/main/README_ES.md">`Spanish`</a> 
+ Readme: <a href="README.md">`English`</a> / <a href="README_ES.md">`Spanish`</a> 
 
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue)
