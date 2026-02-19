@@ -19,11 +19,13 @@
 
 
 A ready to use Out-of-Band (OOB) operations framework. Designed to be more than a callback server, Introspector — **Fingerprints client behavior, assesses attack surface and delivers exploits**.
+&nbsp;
 
 
 <img align="right" src="https://www.introspector.sh/assets/img/introspector_server_start_carbon.png" width="600" height="380" alt="Introspector">
 
 &nbsp;
+
 
 - **HTTP/DNS Callback Tracking**
 - Simple File Host.
@@ -36,6 +38,8 @@ A ready to use Out-of-Band (OOB) operations framework. Designed to be more than 
 
 
 Screenshots are available in the [Docs](https://introspector.sh/screenshots).
+
+&nbsp;
 
 &nbsp;
 
