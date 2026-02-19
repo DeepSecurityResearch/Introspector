@@ -3,22 +3,33 @@
 </p>
 &nbsp;
 
+<div align="center">
+
+ Readme: <a href="https://github.com/projectdiscovery/nuclei/blob/main/README.md">`English`</a> / <a href="https://github.com/projectdiscovery/nuclei/blob/main/README_ES.md">`Spanish`</a> 
+
+
+![Python](https://img.shields.io/badge/python-3.8+-blue)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+[![Docs](https://img.shields.io/badge/docs-introspector.sh-green)](https://introspector.sh)
+</div>
+
 ---
 
 ## Introspector Framework 
 
 
-A ready to use Out-of-Band (OOB) operations framework. Designed to be more than a callback server, Introspector — **Fingerprints client behavior, assesses attack surface and delivers exploits"**.
+A ready to use Out-of-Band (OOB) operations framework. Designed to be more than a callback server, Introspector — **Fingerprints client behavior, assesses attack surface and delivers exploits**.
 
 
-<img align="right" src="https://www.introspector.sh/assets/img/introspector_server_start_carbon.png" height="310" alt="Introspector">
+<img align="right" src="https://www.introspector.sh/assets/img/introspector_server_start_carbon.png" width="600" height="380" alt="Introspector">
 
+&nbsp;
 
-- HTTP/DNS Callback Tracking
+- **HTTP/DNS Callback Tracking**
 - Simple File Host.
-- Ready to use OOB payload arsenal.
+- Ready to use payload arsenal.
 - Passive GEO IP and Whois.
-- HTTP Request Recognisance.
+- HTTP Request Reconnaissance.
 - HTTP Response Fuzzing.
 - Exploit Client-Side and Server-Side with one tool.
 - And much, much [more](https://www.introspector.sh/)...
@@ -26,10 +37,7 @@ A ready to use Out-of-Band (OOB) operations framework. Designed to be more than 
 
 Screenshots are available in the [Docs](https://introspector.sh/screenshots).
 
-
-![Python](https://img.shields.io/badge/python-3.8+-blue)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Docs](https://img.shields.io/badge/docs-introspector.sh-green)](https://introspector.sh)
+&nbsp;
 
 
 ## Introspector's Screenshots
