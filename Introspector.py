@@ -398,13 +398,27 @@ def index_alias():
 
 class ThreadedWSGIServer:
     def __init__(self, host, port, flask_app):
-        # MODIFICADO: usar RawWSGIRequestHandler para eliminar headers automáticos
+        # --- SSL FIX ---
+        ssl_context = None
+        if port == st.HTTPS_PORT:
+            cert = st.HTTPS_CERT
+            key = st.HTTPS_KEY
+            
+            import os
+            if os.path.exists(cert) and os.path.exists(key):
+                ssl_context = (cert, key)
+                print(f"[+] SSL ON PORT {port}")
+            else:
+                print(f"[!] ERROR: no CERTS {cert}")
+        # ------------------
+
         self.server = make_server(
             host, 
             port, 
             flask_app, 
             threaded=True,
-            request_handler=RawWSGIRequestHandler  # <-- FIX: handler personalizado
+            request_handler=RawWSGIRequestHandler,
+            ssl_context=ssl_context  
         )
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
 
