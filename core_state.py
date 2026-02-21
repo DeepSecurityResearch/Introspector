@@ -170,6 +170,15 @@ DNS_SEEN_LOCK = threading.Lock()
 DNS_EXCEPTION_TOKEN = ""
 DNS_EXAMPLE_TOKEN = ""
 
+
+# =====================
+# HTTPS
+# =====================
+
+HTTPS_CERT = "/etc/letsencrypt/live/YOURDOMAIN/fullchain.pem"
+HTTPS_KEY = "/etc/letsencrypt/live/YOURDOMAIN/privkey.pem"
+HTTPS_PORT = 443
+
 # =====================
 # RESPONSE DESIGNER
 # =====================
