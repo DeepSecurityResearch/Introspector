@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Response Designer – Introspector Framework</title>
+  <title>Response Designer</title>
   <style>
     :root {
       --bg:#05030a;
@@ -15,250 +15,909 @@
       --border:#1f2933;
       --muted:#6b7280;
       --chip:#0b1422;
+      --line:rgba(130,170,255,.12);
+      --line-strong:rgba(130,170,255,.22);
+      --soft:#6f7f98;
+      --accent-2:#7bb7ff;
+      --success:#30d17b;
+      --danger:#ff6b6b;
+      --shadow:0 20px 60px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius-sm:12px;
     }
+
     *{box-sizing:border-box;margin:0;padding:0}
-    body{
+
+    html,body{
+      width:100%;
+      height:100%;
+      overflow:hidden;
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       background:radial-gradient(circle at top,#0b1b2f 0,#05030a 55%,#020013 100%);
       color:var(--text);
-      height:100vh;
+    }
+
+    body{
       display:flex;
       flex-direction:column;
-      overflow:hidden;
     }
-    .app{display:flex;flex-direction:column;flex:1;min-width:0}
+
+    .app{
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+      min-width:0;
+    }
+
     .topbar{
       padding:12px 20px;
       border-bottom:1px solid var(--border);
       background:linear-gradient(to right,rgba(42,168,255,0.12),transparent);
-      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-shrink:0;
     }
-    .topbar-left{display:flex;flex-direction:column;gap:2px}
-    .topbar-title{font-size:12px;text-transform:uppercase;letter-spacing:.18em;color:var(--text-soft)}
-    .topbar-main{font-size:18px;font-weight:650}
-    .topbar-right{display:flex;align-items:center;gap:10px;min-width:0}
-    .topbar-pill{
-      padding:4px 10px;border-radius:999px;border:1px solid var(--accent-soft);
-      color:var(--text-soft);font-size:11px;display:inline-flex;align-items:center;gap:6px;
-      background:rgba(15,23,42,.72)
+
+    .topbar-left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width:0;
     }
-    .pill-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e}
-    .host-box{
-      display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;
-      border:1px solid var(--border);background:rgba(15,23,42,.75);font-size:11px;color:var(--text-soft);
+
+    .topbar-title{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      color:var(--text-soft);
     }
-    .nav-tabs{display:flex;gap:4px;align-items:center}
-    .nav-tab{
-      padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;
-      color:var(--text-soft);text-decoration:none;transition:all .15s ease
-    }
-    .nav-tab:hover{background:rgba(42,168,255,.12);color:var(--text)}
-    .nav-tab.active{background:rgba(42,168,255,.2);color:var(--text);border:1px solid rgba(42,168,255,.35)}
-      max-width:360px;min-width:0
-    }
-    .host-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
-    .layout{display:grid;grid-template-columns:340px minmax(0,1fr);flex:1;min-height:0}
-    .sidebar{
-      border-right:1px solid var(--border);
-      background:radial-gradient(circle at top left,#0a2542 0,#05030a 60%);
-      display:flex;flex-direction:column;min-height:0
-    }
-    .sidebar-header{
-      padding:12px 14px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;gap:12px;
-      font-size:13px;color:var(--text-soft)
-    }
-    .sidebar-left{
-      display:flex;align-items:center;gap:10px;min-width:0;
-    }
-    .sidebar-right{
-      display:flex;gap:8px;align-items:center;flex-shrink:0;
-    }
-    .tag{
-      padding:2px 8px;border-radius:999px;background:rgba(15,23,42,.7);
-      border:1px solid var(--border);font-size:11px;color:var(--muted);
+
+    .topbar-main{
+      font-size:18px;
+      font-weight:650;
       white-space:nowrap;
     }
-    .btn-small{
-      border-radius:999px;border:1px solid rgba(42,168,255,.28);background:rgba(42,168,255,.14);
-      padding:5px 12px;font-size:11px;font-weight:650;color:var(--text);cursor:pointer;
-      transition:background .15s ease,border-color .15s ease,transform .05s ease;
-      box-shadow:0 6px 18px rgba(0,0,0,.25)
-    }
-    .btn-small:hover{background:rgba(42,168,255,.22);border-color:rgba(42,168,255,.45)}
-    .btn-small:active{transform:translateY(1px)}
-    .btn-small[disabled]{opacity:.45;cursor:default;box-shadow:none}
 
-    .response-list{flex:1;overflow-y:auto;padding:6px}
-    .response-item{
-      border-radius:10px;padding:12px;margin-bottom:8px;
-      background:rgba(15,23,42,.65);border:1px solid transparent;cursor:pointer;
-      display:flex;flex-direction:column;gap:8px
-    }
-    .response-item:hover{border-color:var(--accent-soft);background:rgba(15,23,42,.9)}
-    .response-item.active{
-      border-color:var(--accent);box-shadow:0 0 0 1px rgba(42,168,255,.26);
-      background:linear-gradient(135deg,rgba(42,168,255,.12),rgba(15,23,42,.92))
-    }
-    .response-header{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
-    .response-path{
-      font-size:14px;color:var(--text);font-weight:600;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1
-    }
-    .response-meta{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px}
-    .response-actions{display:flex;gap:4px;margin-top:4px}
-    .btn-action{
-      padding:2px 6px;border-radius:4px;font-size:10px;cursor:pointer;
-      border:1px solid transparent;background:transparent;color:var(--text-soft);
-      transition:all .15s ease
-    }
-    .btn-action:hover{background:rgba(42,168,255,.15);color:var(--accent)}
-    .btn-action.delete:hover{background:rgba(248,113,113,.15);color:#f87373}
-
-    .main{
-      display:flex;flex-direction:column;flex:1;min-height:0;background:var(--panel)
-    }
-    .main-header{
-      padding:16px 20px;border-bottom:1px solid var(--border);
-      background:linear-gradient(to right,rgba(42,168,255,.08),transparent)
-    }
-    .main-title{font-size:16px;font-weight:650;color:var(--text)}
-    .main-subtitle{font-size:12px;color:var(--text-soft);margin-top:2px}
-    .main-content{
-      flex:1;overflow-y:auto;padding:20px;
-      display:flex;flex-direction:column;
-      gap:16px
-    }
-    .empty-state{
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      flex:1;color:var(--muted);text-align:center;padding:40px
-    }
-    .empty-icon{font-size:48px;margin-bottom:16px;opacity:.5}
-    .empty-title{font-size:16px;font-weight:600;margin-bottom:8px}
-    .empty-text{font-size:13px;max-width:300px;line-height:1.4}
-
-    /* Form */
-    .response-form{
-      display:flex;flex-direction:column;gap:16px;
-    }
-    .form-group{
-      display:flex;flex-direction:column;gap:8px;
-    }
-    .form-label{
-      font-size:12px;
-      font-weight:600;
-      color:var(--text-soft);
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-    .form-input{
-      padding:10px 12px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,.75);
-      color:var(--text);
-      border-radius:6px;
-      font-size:14px;
-      font-family:inherit;
-      transition:border-color .15s ease,background .15s ease;
-    }
-    .form-input:focus{
-      outline:none;
-      border-color:var(--accent);
-      background:rgba(15,23,42,.85);
-      box-shadow:0 0 0 3px rgba(42,168,255,.1);
-    }
-    .form-textarea.small{
-      min-height:100px;
-    }
-    .form-textarea{
-      min-height:200px;
-      resize:vertical;
-      font-family:'Monaco','Menlo','Ubuntu Mono',monospace;
-      font-size:12px;
-      line-height:1.4;
-    }
-    .form-select{
-      padding:10px 12px;
-      border:1px solid var(--border);
-      background:rgba(15,23,42,.75);
-      color:var(--text);
-      border-radius:6px;
-      font-size:14px;
-      font-family:inherit;
-      transition:border-color .15s ease,background .15s ease;
-      cursor:pointer;
-    }
-    .form-select:focus{
-      outline:none;
-      border-color:var(--accent);
-      background:rgba(15,23,42,.85);
-      box-shadow:0 0 0 3px rgba(42,168,255,.1);
-    }
-    .form-select option{
-      background:var(--panel);
-      color:var(--text);
-    }
-    .form-actions{
+    .topbar-right{
       display:flex;
+      align-items:center;
       gap:10px;
-      margin-top:8px;
+      min-width:0;
+      flex-wrap:wrap;
+      justify-content:flex-end;
     }
-    .btn{
-      padding:8px 16px;
-      border-radius:6px;
-      border:1px solid;
-      font-size:13px;
-      font-weight:500;
-      cursor:pointer;
-      transition:all .15s ease;
+
+    .topbar-pill{
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--accent-soft);
+      color:var(--text-soft);
+      font-size:11px;
       display:inline-flex;
       align-items:center;
       gap:6px;
-    }
-    .btn-primary{
-      background:var(--accent);
-      border-color:var(--accent);
-      color:white;
-    }
-    .btn-primary:hover{
-      background:rgba(42,168,255,.85);
-      border-color:rgba(42,168,255,.85);
-      transform:translateY(-1px);
-      box-shadow:0 4px 12px rgba(42,168,255,.25);
-    }
-    .btn-secondary{
-      background:transparent;
-      border-color:var(--border);
-      color:var(--text-soft);
-    }
-    .btn-secondary:hover{
-      background:rgba(15,23,42,.5);
-      color:var(--text);
-      border-color:var(--muted);
+      background:rgba(15,23,42,.72);
     }
 
-    /* Preview */
-    .response-preview{
-      margin-top:16px;
-      padding:12px;
-      background:rgba(0,0,0,.3);
-      border-radius:6px;
-      border:1px solid var(--border);
-      font-family:'Monaco','Menlo','Ubuntu Mono',monospace;
-      font-size:11px;
-      line-height:1.4;
-      color:var(--text-soft);
-      white-space:pre-wrap;
-      word-break:break-all;
-      max-height:200px;
-      overflow-y:auto;
+    .pill-dot{
+      width:7px;
+      height:7px;
+      border-radius:50%;
+      background:#22c55e;
+      box-shadow:0 0 8px #22c55e;
     }
-    .preview-header{
-      font-size:10px;
+
+    .host-box{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(15,23,42,.75);
+      font-size:11px;
+      color:var(--text-soft);
+      max-width:360px;
+      min-width:0;
+    }
+
+    .host-text{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:260px;
+    }
+
+    .copy-btn,
+    .top-btn{
+      border:none;
+      outline:none;
+      border-radius:999px;
+      padding:3px 10px;
+      font-size:11px;
+      background:rgba(42,168,255,.18);
+      color:var(--text);
+      cursor:pointer;
+      line-height:1.8;
+    }
+
+    .copy-btn:hover,
+    .top-btn:hover{
+      background:rgba(42,168,255,.28);
+    }
+
+    .nav-tabs{
+      display:flex;
+      gap:4px;
+      align-items:center;
+    }
+
+    .nav-tab{
+      padding:6px 14px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+      color:var(--text-soft);
+      text-decoration:none;
+      transition:all .15s ease;
+    }
+
+    .nav-tab:hover{
+      background:rgba(42,168,255,.12);
+      color:var(--text);
+    }
+
+    .nav-tab.active{
+      background:rgba(42,168,255,.2);
+      color:var(--text);
+      border:1px solid rgba(42,168,255,.35);
+    }
+
+    .layout{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns:320px minmax(0,1fr);
+    }
+
+    .sidebar{
+      border-right:1px solid var(--line);
+      background:
+        radial-gradient(circle at top left, rgba(38,104,255,.12), transparent 34%),
+        linear-gradient(180deg, rgba(8,13,23,.98), rgba(6,10,18,.98));
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+
+    .sidebar-top{
+      padding:18px 16px 14px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-shrink:0;
+    }
+
+    .sidebar-copy{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+
+    .sidebar-title{
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--text);
+    }
+
+    .sidebar-subtitle{
+      font-size:11px;
       color:var(--muted);
+      letter-spacing:.08em;
+    }
+
+    .sidebar-tools{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-shrink:0;
+    }
+
+    .count-badge{
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      font-size:11px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .sidebar-btn{
+      height:30px;
+      padding:0 12px;
+      border-radius:999px;
+      border:1px solid rgba(110,171,255,.2);
+      background:rgba(79,162,255,.08);
+      color:var(--text);
+      font-size:11px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.16s ease;
+      white-space:nowrap;
+    }
+
+    .sidebar-btn:hover{
+      border-color:rgba(110,171,255,.4);
+      background:rgba(79,162,255,.14);
+    }
+
+    .response-list{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      padding:12px;
+    }
+
+    .response-item{
+      background:linear-gradient(180deg, rgba(10,17,31,.92), rgba(8,14,26,.92));
+      border:1px solid transparent;
+      border-radius:16px;
+      padding:12px 12px 10px;
+      margin-bottom:10px;
+      cursor:pointer;
+      transition:.16s ease;
+      box-shadow:0 10px 30px rgba(0,0,0,.18);
+    }
+
+    .response-item:hover{
+      border-color:rgba(110,171,255,.22);
+      transform:translateY(-1px);
+    }
+
+    .response-item.active{
+      border-color:rgba(110,171,255,.55);
+      background:linear-gradient(180deg, rgba(14,31,57,.94), rgba(8,16,31,.96));
+      box-shadow:0 0 0 1px rgba(110,171,255,.18), 0 20px 40px rgba(0,0,0,.22);
+    }
+
+    .response-item-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:8px;
       margin-bottom:8px;
+    }
+
+    .response-name{
+      font-size:13px;
+      font-weight:800;
+      color:var(--text);
+      line-height:1.3;
+      word-break:break-word;
+    }
+
+    .response-tag{
+      padding:3px 7px;
+      border-radius:999px;
+      border:1px solid rgba(110,171,255,.14);
+      background:rgba(79,162,255,.08);
+      color:var(--accent-2);
+      font-size:10px;
+      font-weight:800;
       text-transform:uppercase;
       letter-spacing:.08em;
+      flex-shrink:0;
+    }
+
+    .response-path{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:8px;
+      word-break:break-all;
+    }
+
+    .response-meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+      font-size:11px;
+      color:var(--soft);
+    }
+
+    .response-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .mini-btn{
+      height:26px;
+      padding:0 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      color:var(--text);
+      font-size:10px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.16s ease;
+    }
+
+    .mini-btn:hover{
+      background:rgba(79,162,255,.08);
+      border-color:rgba(110,171,255,.24);
+    }
+
+    .mini-btn.delete:hover{
+      background:rgba(255,107,107,.1);
+      border-color:rgba(255,107,107,.22);
+      color:#ffd1d1;
+    }
+
+    .main{
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at top left, rgba(26,79,180,.12), transparent 28%),
+        linear-gradient(180deg, rgba(6,11,20,.97), rgba(4,8,15,.98));
+    }
+
+    .workspace{
+      flex:1;
+      min-height:0;
+      overflow:auto;
+      padding:26px;
+    }
+
+    .hero{
+      max-width:980px;
+      margin:0 auto 18px;
+    }
+
+    .hero-title{
+      font-size:28px;
+      line-height:1.1;
+      font-weight:900;
+      letter-spacing:-.03em;
+      margin-bottom:8px;
+    }
+
+    .hero-text{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .panel{
+      max-width:980px;
+      margin:0 auto;
+      border:1px solid var(--line);
+      border-radius:22px;
+      background:linear-gradient(180deg, rgba(8,13,24,.86), rgba(4,8,14,.92));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:12px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    }
+
+    .panel-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+
+    .panel-brand-title{
+      font-size:15px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .panel-brand-origin{
+      font-size:11px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .panel-body{
+      padding:14px;
+      display:grid;
+      gap:14px;
+    }
+
+    .grid-two{
+      display:grid;
+      grid-template-columns:1fr 1.2fr;
+      gap:14px;
+    }
+
+    .box{
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:linear-gradient(180deg, rgba(3,9,19,.86), rgba(2,7,14,.92));
+      min-width:0;
+    }
+
+    .box-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .box-title{
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--text);
+    }
+
+    .box-note{
+      font-size:11px;
+      color:var(--muted);
+      text-align:right;
+    }
+
+    .box-content{
+      padding:12px;
+    }
+
+    .inline-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+
+    .label{
+      font-size:12px;
+      color:var(--text);
+      font-weight:700;
+      margin-bottom:8px;
+      display:block;
+    }
+
+    .subhint{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .field,
+    .select,
+    .textarea{
+      width:100%;
+      background:rgba(1,7,16,.88);
+      color:var(--text);
+      border:1px solid rgba(110,171,255,.16);
+      border-radius:14px;
+      outline:none;
+      transition:.16s ease;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+    }
+
+    .field,
+    .select{
+      height:34px;
+      padding:0 12px;
+      font-size:13px;
+      font-weight:600;
+    }
+
+    .textarea{
+      min-height:140px;
+      padding:12px;
+      resize:vertical;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:12px;
+      line-height:1.45;
+    }
+
+    .textarea.body{
+      min-height:250px;
+    }
+
+    .field:focus,
+    .select:focus,
+    .textarea:focus{
+      border-color:rgba(110,171,255,.5);
+      box-shadow:0 0 0 3px rgba(79,162,255,.12);
+    }
+
+    .toolbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:0 14px 14px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      height:34px;
+      padding:0 16px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      color:var(--text);
+      font-size:12px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.16s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      text-decoration:none;
+    }
+
+    .btn:hover{
+      border-color:rgba(110,171,255,.32);
+      background:rgba(79,162,255,.08);
+    }
+
+    .btn.primary{
+      background:linear-gradient(180deg, rgba(90,157,255,.95), rgba(49,112,230,.95));
+      border-color:rgba(129,182,255,.5);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(54,116,231,.28);
+    }
+
+    .btn.primary:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+    }
+
+    .preview{
+      display:none;
+      margin:0 14px 14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+
+    .preview-head{
+      padding:10px 12px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+      border-bottom:1px solid var(--line);
+    }
+
+    .preview-body{
+      max-height:240px;
+      overflow:auto;
+      padding:12px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:12px;
+      line-height:1.45;
+      color:var(--text);
+    }
+
+    .empty{
+      min-height:520px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:32px;
+      color:var(--muted);
+    }
+
+    .empty-icon{
+      font-size:40px;
+      margin-bottom:14px;
+      opacity:.7;
+    }
+
+    .empty-title{
+      font-size:18px;
+      font-weight:800;
+      color:var(--text);
+      margin-bottom:8px;
+    }
+
+    .empty-text{
+      max-width:360px;
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .toast{
+      position:fixed;
+      bottom:18px;
+      right:20px;
+      background:rgba(15,23,42,.92);
+      color:var(--text);
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--accent-soft);
+      font-size:12px;
+      opacity:0;
+      transform:translateY(10px);
+      transition:opacity .18s ease,transform .18s ease;
+      pointer-events:none;
+      z-index:9999;
+    }
+
+    .toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    @media (max-width:1180px){
+      .layout{
+        grid-template-columns:280px minmax(0,1fr);
+      }
+      .grid-two{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width:920px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+      .sidebar{
+        min-height:260px;
+        max-height:320px;
+      }
+      .topbar{
+        padding:12px;
+        flex-wrap:wrap;
+      }
+      .topbar-right{
+        width:100%;
+        justify-content:flex-end;
+      }
+      .workspace{
+        padding:16px;
+      }
+      .hero-title{
+        font-size:24px;
+      }
+    }
+
+    .topbar{
+      border-bottom:1px solid #1f2933 !important;
+      background:linear-gradient(to right, rgba(13,38,68,.96), rgba(6,13,26,.98) 55%, rgba(3,6,14,.98)) !important;
+    }
+
+    .topbar-pill{
+      background:rgba(15,23,42,.72) !important;
+      border:1px solid rgba(42,168,255,.22) !important;
+      color:#9ca3af !important;
+      box-shadow:none !important;
+    }
+
+    .host-box{
+      background:rgba(15,23,42,.72) !important;
+      border:1px solid #1f2933 !important;
+      color:#cbd5e1 !important;
+    }
+
+    .copy-btn,
+    .top-btn{
+      background:rgba(16,33,56,.96) !important;
+      border:1px solid rgba(42,168,255,.28) !important;
+      color:#f9fafb !important;
+      box-shadow:none !important;
+    }
+
+    .copy-btn:hover,
+    .top-btn:hover{
+      background:rgba(24,49,82,.98) !important;
+      border-color:rgba(42,168,255,.42) !important;
+    }
+
+    .nav-tab{
+      color:#cbd5e1 !important;
+    }
+
+    .nav-tab.active{
+      background:rgba(20,63,108,.7) !important;
+      border:1px solid rgba(42,168,255,.45) !important;
+      box-shadow:none !important;
+    }
+
+    .sidebar{
+      background:
+        linear-gradient(180deg, rgba(10,23,43,.96), rgba(7,16,30,.98)) !important;
+      border-right:1px solid #1f2933 !important;
+    }
+
+    .sidebar-top{
+      border-bottom:1px solid #1f2933 !important;
+    }
+
+    .count-badge{
+      background:rgba(15,23,42,.55) !important;
+      border:1px solid #1f2933 !important;
+      color:#7c8aa0 !important;
+    }
+
+    .sidebar-btn{
+      background:rgba(16,33,56,.96) !important;
+      border:1px solid rgba(42,168,255,.28) !important;
+      color:#f9fafb !important;
+      box-shadow:none !important;
+    }
+
+    .sidebar-btn:hover{
+      background:rgba(24,49,82,.98) !important;
+      border-color:rgba(42,168,255,.42) !important;
+    }
+
+    .response-item{
+      background:linear-gradient(180deg, rgba(11,24,43,.92), rgba(8,17,31,.96)) !important;
+      border:1px solid rgba(31,41,51,.95) !important;
+      box-shadow:none !important;
+    }
+
+    .response-item:hover{
+      background:linear-gradient(180deg, rgba(14,30,54,.95), rgba(9,19,35,.98)) !important;
+      border-color:rgba(42,168,255,.20) !important;
+      transform:none !important;
+    }
+
+    .response-item.active{
+      background:linear-gradient(180deg, rgba(14,35,63,.98), rgba(10,23,43,.98)) !important;
+      border-color:rgba(74,163,255,.7) !important;
+      box-shadow:0 0 0 1px rgba(74,163,255,.18) inset !important;
+    }
+
+    .response-tag{
+      background:rgba(17,53,92,.65) !important;
+      border:1px solid rgba(42,168,255,.24) !important;
+      color:#7bb7ff !important;
+    }
+
+    .mini-btn{
+      background:rgba(6,14,26,.95) !important;
+      border:1px solid #1f2933 !important;
+      color:#f9fafb !important;
+    }
+
+    .mini-btn:hover{
+      background:rgba(18,39,67,.9) !important;
+      border-color:rgba(42,168,255,.24) !important;
+    }
+
+    .main{
+      background:
+        radial-gradient(circle at top right, rgba(15,55,96,.22), transparent 30%),
+        linear-gradient(180deg, rgba(5,11,20,.98), rgba(4,9,17,.99)) !important;
+    }
+
+    .hero-text,
+    .box-note,
+    .panel-brand-origin,
+    .response-path,
+    .response-meta,
+    .sidebar-subtitle{
+      color:#7f8da3 !important;
+    }
+
+    .panel{
+      background:linear-gradient(180deg, rgba(10,20,37,.88), rgba(7,14,27,.94)) !important;
+      border:1px solid #1f2933 !important;
+      box-shadow:none !important;
+    }
+
+    .panel-top{
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0)) !important;
+      border-bottom:1px solid #1f2933 !important;
+    }
+
+    .box{
+      background:linear-gradient(180deg, rgba(11,21,39,.92), rgba(8,15,28,.96)) !important;
+      border:1px solid #1f2933 !important;
+      box-shadow:none !important;
+    }
+
+    .box-head{
+      border-bottom:1px solid #1f2933 !important;
+      background:rgba(255,255,255,.01) !important;
+    }
+
+    .field,
+    .select,
+    .textarea{
+      background:rgba(2,8,20,.98) !important;
+      border:1px solid rgba(31,41,55,.95) !important;
+      color:#f9fafb !important;
+      box-shadow:none !important;
+    }
+
+    .field:focus,
+    .select:focus,
+    .textarea:focus{
+      border-color:rgba(42,168,255,.55) !important;
+      box-shadow:0 0 0 1px rgba(42,168,255,.18) !important;
+    }
+
+    .btn{
+      background:rgba(6,14,26,.95) !important;
+      border:1px solid #1f2933 !important;
+      color:#f9fafb !important;
+      box-shadow:none !important;
+    }
+
+    .btn:hover{
+      background:rgba(18,39,67,.9) !important;
+      border-color:rgba(42,168,255,.24) !important;
+    }
+
+    .btn.primary{
+      background:linear-gradient(180deg, #5d9bff, #3b78e7) !important;
+      border:1px solid rgba(129,182,255,.45) !important;
+      color:#fff !important;
+      box-shadow:none !important;
+    }
+
+    .btn.primary:hover{
+      background:linear-gradient(180deg, #6aa5ff, #4582ee) !important;
+      border-color:rgba(129,182,255,.6) !important;
+      transform:none !important;
+      filter:none !important;
+    }
+
+    .preview{
+      background:rgba(9,16,30,.92) !important;
+      border:1px solid #1f2933 !important;
+    }
+
+    .preview-head{
+      border-bottom:1px solid #1f2933 !important;
+      color:#7f8da3 !important;
+    }
+
+    .toast{
+      background:rgba(15,23,42,.95) !important;
+      border:1px solid rgba(42,168,255,.24) !important;
+      color:#f9fafb !important;
     }
   </style>
 </head>
@@ -266,390 +925,681 @@
   <div class="app">
     <header class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title">Response Designer</div>
-        <div class="topbar-main">HTTP Response Builder</div>
+        <div class="topbar-main">RESPONSE DESIGNER</div>
+        <div class="topbar-title">HTTP OPS - WEB CONSOLE</div>
       </div>
       <div class="topbar-right">
         <div class="nav-tabs">
           <a href="/{{ log_path }}" class="nav-tab">📡 Logs</a>
           <a href="/ResponseDesigner" class="nav-tab active">🎨 Response Designer</a>
         </div>
-        <div class="topbar-pill">
-          <span class="pill-dot"></span>
-          <span>Designer Active</span>
-        </div>
         <div class="host-box">
-          <span class="host-text">Response Designer v1.0</span>
+          <span class="host-text" id="originChip"></span>
+          <button class="copy-btn" id="copyCurrentUrlBtn" type="button" onclick="copyCurrentUrl()">Copy</button>
         </div>
+        <div class="topbar-pill"><span class="pill-dot"></span><span id="designerStatus">listening</span></div>
       </div>
     </header>
 
     <main class="layout">
       <aside class="sidebar">
-        <div class="sidebar-header">
-          <div class="sidebar-left">
-            <span>Response Designer</span>
-            <span class="tag" id="responseCount">0 responses</span>
+        <div class="sidebar-top">
+          <div class="sidebar-copy">
+            <div class="sidebar-title">Saved responses</div>
+            <div class="sidebar-subtitle">Routes and payloads available for reuse</div>
           </div>
-          <div class="sidebar-right">
-            <button class="btn-small" onclick="addNewResponse()">+ New Response</button>
-            <button class="btn-small" onclick="listActiveResponses()">📋 List</button>
+          <div class="sidebar-tools">
+            <span class="count-badge" id="responseCount">0 responses</span>
+            <button class="sidebar-btn" type="button" onclick="addNewResponse()">New</button>
           </div>
         </div>
-        <div class="response-list" id="responseList">
-          <!-- Response items will be dynamically added here -->
-        </div>
+        <div class="response-list" id="responseList"></div>
       </aside>
 
       <section class="main">
-        <div class="main-header">
-          <div class="main-title" id="mainTitle">Select a Response</div>
-          <div class="main-subtitle" id="mainSubtitle">Choose a response from left panel to edit</div>
-        </div>
-        <div class="main-content" id="mainContent">
-          <div class="empty-state">
-            <div class="empty-icon">📝</div>
-            <div class="empty-title">No Response Selected</div>
-            <div class="empty-text">Create a new response or select an existing one from left panel</div>
+        <div class="workspace">
+          <div class="hero">
+            <div class="hero-title">Craft a response</div>
+            <div class="hero-text">Define route, status/headers, and body. Saved items stay visible on the left.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-top">
+              <div class="panel-brand">
+                <div class="panel-brand-title">Response Designer</div>
+                <div class="panel-brand-origin" id="panelOrigin"></div>
+              </div>
+            </div>
+
+            <div class="panel-body" id="mainContent">
+              <div class="empty">
+                <div class="empty-icon">📝</div>
+                <div class="empty-title">No response selected</div>
+                <div class="empty-text">Create a new response or choose one from the left panel.</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
 
+  <div id="toast" class="toast">Copied to clipboard</div>
+
   <script>
-    let responseCounter = 0;
-    let activeResponseId = null;
-    const responses = new Map();
+    let responseCounter = 0
+    let activeResponseId = null
+    const responses = new Map()
+    const CALLBACK_BASE = "{{ dns_example or '' }}"
+
+    function sanitizeHost(value) {
+      return String(value || '')
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/+$|\s+$/g, '')
+        .replace(/\/.*$/, '')
+    }
+
+    function getDisplayOrigin() {
+      return sanitizeHost(CALLBACK_BASE) || window.location.host
+    }
+
+    function getPublicBaseUrl() {
+      const host = sanitizeHost(CALLBACK_BASE)
+      if (host) return `http://${host}`
+      return `${window.location.protocol}//${window.location.host}`
+    }
+
+    function normalizePath(path) {
+      const raw = String(path || '').trim()
+      if (!raw) return ''
+      return raw.startsWith('/') ? raw : `/${raw}`
+    }
+
+    function getResponseRoute(response) {
+      if (!response) return '/'
+      if (response.path) return normalizePath(response.path)
+      if (response.url) return normalizePath(response.url)
+      if (response.full_path) {
+        const clean = String(response.full_path).replace(/^design\//, '')
+        return normalizePath(clean)
+      }
+      return '/'
+    }
+
+    function buildPublicUrl(path) {
+      return `${getPublicBaseUrl()}${normalizePath(path || '/') || '/'}`
+    }
+
+    const STORAGE_KEYS = {
+      active: 'response_designer_active_id',
+      drafts: 'response_designer_drafts'
+    }
 
     function generateResponseId() {
-      return `response-${++responseCounter}`;
+      responseCounter += 1
+      return `response-${responseCounter}`
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    }
+
+    function getDefaultHeaders() {
+      return `HTTP/1.1 200 OK\r\nContent-Type: text/plain; charset=utf-8`
+    }
+
+    function getDefaultBody() {
+      return `Hello, world!`
     }
 
     function createResponse(name = 'New Response') {
-      const responseId = generateResponseId();
+      const responseId = generateResponseId()
+      const now = new Date().toISOString()
       const response = {
         id: responseId,
-        name: name,
+        name,
         path: '',
-        headers: `HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nServer: Introspector/1.0\r\nConnection: close\r\n\r\n`,
-        body: '<!DOCTYPE html>\n<html>\n<head>\n  <title>Custom Response</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n  <p>This is a custom response.</p>\n</body>\n</html>',
-        createdAt: new Date().toISOString()
-      };
-      
-      responses.set(responseId, response);
-      return response;
+        full_path: null,
+        url: null,
+        headers: getDefaultHeaders(),
+        body: getDefaultBody(),
+        createdAt: now,
+        updatedAt: now,
+        saved: false
+      }
+      responses.set(responseId, response)
+      saveDraftState()
+      return response
+    }
+
+    function setOriginLabels() {
+      const active = responses.get(activeResponseId)
+      const route = getResponseRoute(active)
+      const originChip = document.getElementById('originChip')
+      const panelOrigin = document.getElementById('panelOrigin')
+      const designerStatus = document.getElementById('designerStatus')
+
+      if (originChip) originChip.textContent = getDisplayOrigin()
+      if (panelOrigin) panelOrigin.textContent = `origin: ${getDisplayOrigin()}`
+      if (designerStatus) designerStatus.textContent = `listening on ${route}`
+
+      return buildPublicUrl(route)
+    }
+
+    function saveActiveResponseId(id) {
+      try {
+        localStorage.setItem(STORAGE_KEYS.active, id || '')
+      } catch (_) {}
+    }
+
+    function getSavedActiveResponseId() {
+      try {
+        return localStorage.getItem(STORAGE_KEYS.active) || null
+      } catch (_) {
+        return null
+      }
+    }
+
+    function saveDraftState() {
+      try {
+        const all = Array.from(responses.values())
+        localStorage.setItem(STORAGE_KEYS.drafts, JSON.stringify(all))
+      } catch (_) {}
+    }
+
+    function loadDraftState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.drafts)
+        if (!raw) return []
+        const data = JSON.parse(raw)
+        return Array.isArray(data) ? data : []
+      } catch (_) {
+        return []
+      }
+    }
+
+    function bumpCounterFromId(id) {
+      const numeric = Number(String(id || '').replace('response-', ''))
+      if (!Number.isNaN(numeric)) {
+        responseCounter = Math.max(responseCounter, numeric)
+      }
+    }
+
+    function syncDraftsIntoState() {
+      const drafts = loadDraftState()
+      if (!drafts.length) return
+
+      const byFullPath = new Map()
+      responses.forEach((item) => {
+        if (item.full_path) byFullPath.set(item.full_path, item.id)
+      })
+
+      drafts.forEach((draft) => {
+        const fullPath = draft.full_path || null
+        let targetId = null
+
+        if (fullPath && byFullPath.has(fullPath)) {
+          targetId = byFullPath.get(fullPath)
+        } else if (draft.id && responses.has(draft.id)) {
+          targetId = draft.id
+        }
+
+        if (targetId) {
+          const current = responses.get(targetId)
+          responses.set(targetId, {
+            ...current,
+            name: draft.name ?? current.name,
+            path: draft.path ?? current.path,
+            headers: draft.headers ?? current.headers,
+            body: draft.body ?? current.body,
+            full_path: current.full_path || draft.full_path || null,
+            url: current.url || draft.url || null,
+            createdAt: current.createdAt || draft.createdAt || new Date().toISOString(),
+            updatedAt: draft.updatedAt || current.updatedAt || new Date().toISOString(),
+            saved: current.saved ?? true
+          })
+        } else if (!fullPath) {
+          const id = draft.id || generateResponseId()
+          bumpCounterFromId(id)
+          responses.set(id, {
+            id,
+            name: draft.name || 'Untitled Response',
+            path: normalizePath(draft.path || ''),
+            full_path: draft.full_path || null,
+            url: draft.url || null,
+            headers: draft.headers || getDefaultHeaders(),
+            body: draft.body || getDefaultBody(),
+            createdAt: draft.createdAt || new Date().toISOString(),
+            updatedAt: draft.updatedAt || new Date().toISOString(),
+            saved: false
+          })
+        }
+      })
+    }
+
+    async function loadSavedResponses() {
+      try {
+        const res = await fetch('/api/response-designer/list', { cache: 'no-store' })
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          return false
+        }
+
+        responses.clear()
+        responseCounter = 0
+
+        Object.entries(data.responses || {}).forEach(([fullPath, item]) => {
+          const responseId = item.response_id || generateResponseId()
+          bumpCounterFromId(responseId)
+          const cleanPath = fullPath.startsWith('design/')
+            ? `/${fullPath.slice('design/'.length)}`
+            : normalizePath(fullPath)
+
+          responses.set(responseId, {
+            id: responseId,
+            name: item.name || 'Untitled Response',
+            path: cleanPath,
+            full_path: fullPath,
+            url: cleanPath,
+            headers: item.headers || getDefaultHeaders(),
+            body: item.body || getDefaultBody(),
+            createdAt: item.created_at || new Date().toISOString(),
+            updatedAt: item.updated_at || item.created_at || new Date().toISOString(),
+            saved: true
+          })
+        })
+
+        syncDraftsIntoState()
+        saveDraftState()
+        return true
+      } catch (_) {
+        syncDraftsIntoState()
+        saveDraftState()
+        return false
+      }
+    }
+
+    function formatTime(value) {
+      try {
+        return new Date(value).toLocaleTimeString()
+      } catch (_) {
+        return ''
+      }
     }
 
     function renderResponseList() {
-      const responseList = document.getElementById('responseList');
-      const responseCount = document.getElementById('responseCount');
-      
-      responseList.innerHTML = '';
-      responseCount.textContent = `${responses.size} response${responses.size !== 1 ? 's' : ''}`;
-      
-      responses.forEach((response) => {
-        const responseItem = document.createElement('div');
-        responseItem.className = `response-item ${response.id === activeResponseId ? 'active' : ''}`;
-        responseItem.onclick = () => selectResponse(response.id);
-        
-        const displayName = response.name || 'Untitled Response';
-        const displayPath = response.path || '/path-not-set';
-        const createdAt = new Date(response.createdAt).toLocaleTimeString();
-        
-        responseItem.innerHTML = `
-          <div class="response-header">
-            <div class="response-path" title="${displayName}">${displayName}</div>
+      const list = document.getElementById('responseList')
+      const count = document.getElementById('responseCount')
+      list.innerHTML = ''
+      count.textContent = `${responses.size} response${responses.size === 1 ? '' : 's'}`
+
+      const ordered = Array.from(responses.values()).sort((a, b) => {
+        return new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
+      })
+
+      ordered.forEach((response) => {
+        const item = document.createElement('div')
+        item.className = `response-item ${response.id === activeResponseId ? 'active' : ''}`
+        item.onclick = () => selectResponse(response.id)
+
+        const name = escapeHtml(response.name || 'Untitled Response')
+        const path = escapeHtml(response.path || '/path-not-set')
+        const time = escapeHtml(formatTime(response.updatedAt || response.createdAt))
+        const savedTag = response.saved ? 'saved' : 'draft'
+
+        item.innerHTML = `
+          <div class="response-item-top">
+            <div class="response-name">${name}</div>
+            <span class="response-tag">${savedTag}</span>
           </div>
+          <div class="response-path">${path}</div>
           <div class="response-meta">
-            <span>📍 ${displayPath}</span>
-            <span>🕐 ${createdAt}</span>
+            <span>${time}</span>
+            <span>${response.url ? 'ready' : 'local'}</span>
           </div>
           <div class="response-actions">
-            <button class="btn-action delete" onclick="deleteResponse(event, '${response.id}')">🗑️</button>
+            <button class="mini-btn delete" type="button" onclick="deleteResponse(event, '${response.id}')">Delete</button>
           </div>
-        `;
-        
-        responseList.appendChild(responseItem);
-      });
+        `
+        list.appendChild(item)
+      })
+
+      setOriginLabels()
     }
 
     function selectResponse(responseId) {
-      if (!responses.has(responseId)) return;
-      
-      activeResponseId = responseId;
-      renderResponseList();
-      renderResponseForm();
+      if (!responses.has(responseId)) return
+      activeResponseId = responseId
+      saveActiveResponseId(responseId)
+      renderResponseList()
+      renderResponseForm()
     }
 
     function renderResponseForm() {
-      const mainTitle = document.getElementById('mainTitle');
-      const mainSubtitle = document.getElementById('mainSubtitle');
-      const mainContent = document.getElementById('mainContent');
-      
+      const main = document.getElementById('mainContent')
+
       if (!activeResponseId || !responses.has(activeResponseId)) {
-        mainTitle.textContent = 'Select a Response';
-        mainSubtitle.textContent = 'Choose a response from left panel to edit';
-        mainContent.innerHTML = `
-          <div class="empty-state">
+        main.innerHTML = `
+          <div class="empty">
             <div class="empty-icon">📝</div>
-            <div class="empty-title">No Response Selected</div>
-            <div class="empty-text">Create a new response or select an existing one from left panel</div>
+            <div class="empty-title">No response selected</div>
+            <div class="empty-text">Create a new response or choose one from the left panel.</div>
           </div>
-        `;
-        return;
+        `
+        setOriginLabels()
+        return
       }
-      
-      const response = responses.get(activeResponseId);
-      
-      mainTitle.textContent = response.name || 'Untitled Response';
-      mainSubtitle.textContent = response.path || 'Path not set';
-      
-      mainContent.innerHTML = `
-        <div class="response-form">
-          <div class="form-group">
-            <label class="form-label">Response Name</label>
-            <input type="text" 
-                   class="form-input" 
-                   placeholder="Response Name" 
-                   value="${response.name || ''}"
-                   onchange="updateResponse('${response.id}', 'name', this.value)">
+
+      const response = responses.get(activeResponseId)
+      const safeName = escapeHtml(response.name || '')
+      const safePath = escapeHtml(response.path || '')
+      const safeHeaders = escapeHtml(response.headers || '')
+      const safeBody = escapeHtml(response.body || '')
+      const currentUrl = buildPublicUrl(getResponseRoute(response))
+
+      main.innerHTML = `
+        <div class="grid-two">
+          <div class="box">
+            <div class="box-head">
+              <div class="box-title">Route</div>
+              <div class="check-row">
+                <input id="visualHttps" type="checkbox" checked>
+                <label for="visualHttps">HTTPS <span class="subhint">(visual)</span></label>
+              </div>
+            </div>
+            <div class="box-content">
+              <label class="label">File</label>
+              <input id="path-${response.id}" class="field" type="text" value="${safePath}" placeholder="/exploit" oninput="updateResponse('${response.id}','path',this.value)">
+              <div style="margin-top:10px;">
+                <label class="label">Name</label>
+                <input id="name-${response.id}" class="field" type="text" value="${safeName}" placeholder="Payload name" oninput="updateResponse('${response.id}','name',this.value)">
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Response Path URL</label>
-            <input type="text" 
-                   class="form-input" 
-                   placeholder="/controledpayload.html" 
-                   value="${response.path || ''}"
-                   onchange="updateResponse('${response.id}', 'path', this.value)">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Template Preset</label>
-            <select class="form-select" onchange="applyTemplate('${response.id}', this.value)">
-              <option value="">Select a template...</option>
-              <option value="svg-xss">SVG XSS</option>
-              <option value="js-cookie-receiver">Javascript Cookie Receiver</option>
-              <option value="local-ip-obtain">Local IP Obtain</option>
-              <option value="xss-csv">XSS via CSV</option>
-              <option value="iframe-local-file">Iframe with Local File Loader</option>
-              <option value="xxe-xml">XXE XML Payload</option>
-              <option value="css-exfiltration">CSS Data Exfiltration</option>
-              <option value="jsonp-callback">JSONP Callback</option>
-              <option value="ssti-payload">Server-Side Template Injection</option>
-              <option value="blind-ssrf">Blind SSRF Callback</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Response Headers</label>
-            <textarea id="headers-${response.id}" class="form-input form-textarea small" 
-                      placeholder="HTTP/1.1 200 OK&#10;Content-Type: text/html&#10;Server: Introspector/1.0&#10;Connection: close&#10;&#10;"
-                      onchange="updateResponse('${response.id}', 'headers', this.value)">${response.headers || ''}</textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Response Body</label>
-            <textarea id="body-${response.id}" class="form-input form-textarea" 
-                      placeholder="&lt;!DOCTYPE html&gt;&#10;&lt;html&gt;&#10;&lt;head&gt;&#10;  &lt;title&gt;Custom Response&lt;/title&gt;&#10;&lt;/head&gt;&#10;&lt;body&gt;&#10;  &lt;h1&gt;Hello World&lt;/h1&gt;&#10;  &lt;p&gt;This is a custom response.&lt;/p&gt;&#10;&lt;/body&gt;&#10;&lt;/html&gt;"
-                      onchange="updateResponse('${response.id}', 'body', this.value)">${response.body || ''}</textarea>
-          </div>
-
-          <div class="form-actions">
-            <button class="btn btn-primary" onclick="saveResponse('${response.id}')">
-              💾 Save & Activate Response
-            </button>
-            <button class="btn btn-secondary" onclick="previewResponse('${response.id}')">
-              👁️ Preview
-            </button>
-          </div>
-
-          <div class="response-preview" id="preview-${response.id}" style="display:none;">
-            <div class="preview-header">Response Preview:</div>
-            <div id="preview-content-${response.id}"></div>
+          <div class="box">
+            <div class="box-head">
+              <div class="box-title">Headers</div>
+              <div class="box-note">First line may include status (eg. HTTP/1.1 200 OK)</div>
+            </div>
+            <div class="box-content">
+              <div class="inline-top">
+                <label class="label" style="margin-bottom:0;">Head</label>
+                <select class="select" onchange="applyTemplate('${response.id}', this.value)">
+                  <option value="">Template preset</option>
+                  <option value="svg-xss">SVG XSS</option>
+                  <option value="js-cookie-receiver">Javascript Cookie Receiver</option>
+                  <option value="local-ip-obtain">Local IP Obtain</option>
+                  <option value="xss-csv">XSS via CSV</option>
+                  <option value="iframe-local-file">Iframe with Local File Loader</option>
+                  <option value="xxe-xml">XXE XML Payload</option>
+                  <option value="css-exfiltration">CSS Data Exfiltration</option>
+                  <option value="jsonp-callback">JSONP Callback</option>
+                  <option value="ssti-payload">Server-Side Template Injection</option>
+                  <option value="blind-ssrf">Blind SSRF Callback</option>
+                </select>
+              </div>
+              <textarea id="headers-${response.id}" class="textarea" oninput="updateResponse('${response.id}','headers',this.value)">${safeHeaders}</textarea>
+            </div>
           </div>
         </div>
-      `;
+
+        <div class="box">
+          <div class="box-head">
+            <div class="box-title">Body</div>
+            <div class="box-note">Response body served at the configured path</div>
+          </div>
+          <div class="box-content">
+            <label class="label">Body</label>
+            <textarea id="body-${response.id}" class="textarea body" oninput="updateResponse('${response.id}','body',this.value)">${safeBody}</textarea>
+          </div>
+          <div class="toolbar">
+            <button class="btn primary" type="button" onclick="saveResponse('${response.id}')">Save</button>
+            <a class="btn" href="${escapeHtml(currentUrl)}" target="_blank" rel="noopener">Open in tab</a>
+          </div>
+          <div class="preview" id="preview-${response.id}">
+            <div class="preview-head">Response preview</div>
+            <div class="preview-body" id="preview-content-${response.id}"></div>
+          </div>
+        </div>
+      `
+      setOriginLabels()
     }
 
     function updateResponse(responseId, field, value) {
-      if (!responses.has(responseId)) return;
-      
-      const response = responses.get(responseId);
-      response[field] = value;
-      
-      if (field === 'name') {
-        // Update the header title immediately
-        const mainTitle = document.getElementById('mainTitle');
-        if (mainTitle && responseId === activeResponseId) {
-          mainTitle.textContent = value || 'Untitled Response';
-        }
-        // Update the list item name
-        renderResponseList();
-      } else if (field === 'path') {
-        // Update the subtitle immediately
-        const mainSubtitle = document.getElementById('mainSubtitle');
-        if (mainSubtitle && responseId === activeResponseId) {
-          mainSubtitle.textContent = value || 'Path not set';
-        }
-        // Update the list item path
-        renderResponseList();
+      if (!responses.has(responseId)) return
+
+      const response = responses.get(responseId)
+      response[field] = field === 'path' ? normalizePath(value) : value
+      response.updatedAt = new Date().toISOString()
+
+      if (field === 'path') {
+        response.url = response.full_path ? `/${response.full_path}` : null
+        setOriginLabels()
       }
+
+      saveDraftState()
     }
 
     function addNewResponse() {
-      const newResponse = createResponse(`Response ${responses.size + 1}`);
-      selectResponse(newResponse.id);
+      const newResponse = createResponse(`Response ${responses.size + 1}`)
+      renderResponseList()
+      selectResponse(newResponse.id)
     }
 
-    function deleteResponse(event, responseId) {
-      event.stopPropagation();
-      
-      if (!responses.has(responseId)) return;
-      
-      if (confirm('Are you sure you want to delete this response?')) {
-        responses.delete(responseId);
-        
-        if (activeResponseId === responseId) {
-          activeResponseId = responses.size > 0 ? responses.keys().next().value : null;
+    async function deleteResponse(event, responseId) {
+      event.stopPropagation()
+      if (!responses.has(responseId)) return
+
+      const response = responses.get(responseId)
+      const label = response.name || response.path || responseId
+      if (!confirm(`Delete "${label}"?`)) return
+
+      let removedOnServer = true
+
+      if (response.full_path) {
+        try {
+          const res = await fetch(`/api/response-designer/delete/${encodeURIComponent(responseId)}`, {
+            method: 'DELETE'
+          })
+          const data = await res.json()
+          removedOnServer = !!data.success
+        } catch (_) {
+          removedOnServer = false
         }
-        
-        renderResponseList();
-        renderResponseForm();
+      }
+
+      if (!response.full_path || removedOnServer) {
+        responses.delete(responseId)
+        if (activeResponseId === responseId) {
+          activeResponseId = responses.size ? Array.from(responses.keys())[0] : null
+          saveActiveResponseId(activeResponseId)
+        }
+        saveDraftState()
+        renderResponseList()
+        renderResponseForm()
+      } else {
+        alert('Could not delete the saved response from the backend.')
       }
     }
 
     async function saveResponse(responseId) {
-      if (!responses.has(responseId)) return;
-      
-      const response = responses.get(responseId);
-      
+      if (!responses.has(responseId)) return
+
+      const response = responses.get(responseId)
+      response.path = normalizePath(response.path)
+
       if (!response.path) {
-        alert('Please specify a Response Path URL before saving');
-        return;
+        alert('Please specify a Response Path URL before saving')
+        return
       }
-      
+
       try {
-        const result = await fetch('/api/response-designer/save', {
+        const res = await fetch('/api/response-designer/save', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             response_id: responseId,
-            name: response.name,
+            name: response.name || 'Untitled Response',
             path: response.path,
-            headers: response.headers,
-            body: response.body
+            headers: response.headers || '',
+            body: response.body || ''
           })
-        });
-        
-        const data = await result.json();
-        
-        if (data.success) {
-          alert(`✅ Response saved and available at: ${window.location.origin}${data.url}`);
-          
-          // Optional: update response with saved info
-          response.url = data.url;
-          response.full_path = data.path;
-          
-        } else {
-          alert(`❌ Error saving response: ${data.error || 'Unknown error'}`);
+        })
+
+        const data = await res.json()
+
+        if (!res.ok || !data.success) {
+          alert(`Error saving response: ${data.error || 'Unknown error'}`)
+          return
         }
-        
+
+        response.full_path = data.path
+        response.url = normalizePath(response.path)
+        response.saved = true
+        response.updatedAt = new Date().toISOString()
+        if (!response.createdAt) {
+          response.createdAt = new Date().toISOString()
+        }
+
+        saveDraftState()
+        renderResponseList()
+        renderResponseForm()
       } catch (error) {
-        console.error('Error saving response:', error);
-        alert(`❌ Network error saving response: ${error.message}`);
+        alert(`Network error saving response: ${error.message}`)
       }
     }
 
+    function openResponse(responseId) {
+      if (!responses.has(responseId)) return
+      const response = responses.get(responseId)
+      const route = getResponseRoute(response)
+      if (!route) {
+        alert('Save the response first or set a path.')
+        return
+      }
+      window.open(buildPublicUrl(route), '_blank', 'noopener')
+    }
+
     async function getTemplateData(templateName) {
-      if (!templateName) return {headers: '', body: ''};
-      
+      if (!templateName) return { headers: '', body: '' }
+
       try {
-        const response = await fetch('/api/response-template/' + templateName);
-        if (response.ok) {
-          return await response.json();
-        } else {
-          return {headers: '', body: ''};
-        }
-      } catch (error) {
-        console.error('Error loading template:', error);
-        return {headers: '', body: ''};
+        const response = await fetch(`/api/response-template/${encodeURIComponent(templateName)}`)
+        if (!response.ok) return { headers: '', body: '' }
+        return await response.json()
+      } catch (_) {
+        return { headers: '', body: '' }
       }
     }
 
     async function applyTemplate(responseId, templateName) {
-      if (!templateName || !responses.has(responseId)) return;
-      
-      const template = await getTemplateData(templateName);
-      const response = responses.get(responseId);
-      
-      response.headers = template.headers || '';
-      response.body = template.body || '';
-      
-      // Update form fields
-      const headersTextarea = document.getElementById(`headers-${responseId}`);
-      const bodyTextarea = document.getElementById(`body-${responseId}`);
-      
-      if (headersTextarea) headersTextarea.value = template.headers || '';
-      if (bodyTextarea) bodyTextarea.value = template.body || '';
+      if (!templateName || !responses.has(responseId)) return
+      const template = await getTemplateData(templateName)
+      const response = responses.get(responseId)
+
+      response.headers = template.headers || response.headers || getDefaultHeaders()
+      response.body = template.body || response.body || getDefaultBody()
+      response.updatedAt = new Date().toISOString()
+
+      const headersEl = document.getElementById(`headers-${responseId}`)
+      const bodyEl = document.getElementById(`body-${responseId}`)
+
+      if (headersEl) headersEl.value = response.headers
+      if (bodyEl) bodyEl.value = response.body
+
+      saveDraftState()
+      renderResponseList()
     }
 
-    async function listActiveResponses() {
+    async function initializeApp() {
+      await loadSavedResponses()
+      renderResponseList()
+
+      const savedActiveId = getSavedActiveResponseId()
+      if (savedActiveId && responses.has(savedActiveId)) {
+        selectResponse(savedActiveId)
+        return
+      }
+
+      const firstId = Array.from(responses.keys())[0]
+      if (firstId) {
+        selectResponse(firstId)
+        return
+      }
+
+      const firstResponse = createResponse('Response 1')
+      renderResponseList()
+      selectResponse(firstResponse.id)
+    }
+
+    initializeApp()
+
+    function showToast(message) {
+      const toast = document.getElementById('toast')
+      if (!toast) return
+      toast.textContent = message
+      toast.classList.add('show')
+      setTimeout(() => toast.classList.remove('show'), 1400)
+    }
+
+    function copyText(text, successMessage, failureMessage) {
+      if (!text) {
+        showToast(failureMessage || 'No text available')
+        return false
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(() => showToast(successMessage || 'Copied'))
+          .catch(() => {
+            const tmp = document.createElement('textarea')
+            tmp.value = text
+            document.body.appendChild(tmp)
+            tmp.select()
+            try {
+              document.execCommand('copy')
+              showToast(successMessage || 'Copied')
+            } catch (_) {
+              showToast(failureMessage || 'Failed to copy')
+            }
+            document.body.removeChild(tmp)
+          })
+        return true
+      }
+
+      const tmp = document.createElement('textarea')
+      tmp.value = text
+      document.body.appendChild(tmp)
+      tmp.select()
       try {
-        const response = await fetch('/api/response-designer/debug');
-        const data = await response.json();
-        
-        if (data.success) {
-          let content = "📋 Active Response Designer Responses:\n\n";
-          
-          for (const [path, info] of Object.entries(data.stored_responses)) {
-            content += `📍 ${path}\n`;
-            content += `   Name: ${info.name}\n`;
-            content += `   Headers: ${info.headers_length} chars\n`;
-            content += `   Body: ${info.body_length} chars\n`;
-            content += `   Updated: ${new Date(info.updated_at).toLocaleString()}\n`;
-            content += `   URL: ${window.location.origin}/${path}\n\n`;
-          }
-          
-          alert(content);
-        } else {
-          alert('Error loading responses: ' + (data.error || 'Unknown error'));
-        }
-      } catch (error) {
-        console.error('Error loading responses:', error);
-        alert('Network error: ' + error.message);
+        document.execCommand('copy')
+        showToast(successMessage || 'Copied')
+      } catch (_) {
+        showToast(failureMessage || 'Failed to copy')
       }
+      document.body.removeChild(tmp)
+      return true
     }
 
-    function previewResponse(responseId) {
-      if (!responses.has(responseId)) return;
-      
-      const response = responses.get(responseId);
-      const previewEl = document.getElementById(`preview-${responseId}`);
-      const contentEl = document.getElementById(`preview-content-${responseId}`);
-      
-      // Combine headers and body for preview
-      const fullResponse = (response.headers || '') + (response.body || '');
-      contentEl.textContent = fullResponse;
-      
-      previewEl.style.display = previewEl.style.display === 'none' ? 'block' : 'none';
-    }
+    function copyCurrentUrl() {
+      const url = setOriginLabels()
+      const btn = document.getElementById('copyCurrentUrlBtn')
+      if (btn) btn.textContent = 'Copying...'
 
-    // Initialize app
-    function initializeApp() {
-      // Create initial response if empty
-      if (responses.size === 0) {
-        const firstResponse = createResponse('Response 1');
-        selectResponse(firstResponse.id);
-      } else {
-        renderResponseList();
-        renderResponseForm();
-      }
-    }
+      copyText(url, 'Response URL copied', 'Failed to copy')
 
-    // Start the app
-    initializeApp();
+      setTimeout(() => {
+        if (btn) btn.textContent = 'Copy'
+      }, 1200)
+    }
   </script>
 </body>
 </html>
