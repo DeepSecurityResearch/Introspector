@@ -72,7 +72,7 @@ def api_logs_clear():
 @admin_app.route("/api/logs/delete/<int:index>", methods=["DELETE"])
 def delete_one(index):
     n = len(st.LOGS)
-    real_index = (n - 1) - index 
+    real_index = (n - 1) - index
 
     if 0 <= real_index < n:
         del st.LOGS[real_index]
@@ -106,13 +106,17 @@ def serve_logs_ui():
 
 @admin_app.route("/ResponseDesigner", methods=["GET"])
 def serve_response_designer():
-    return render_template("response_designer.html", log_path=st.LOG_PATH)
+    return render_template(
+        "response_designer.html",
+        log_path=st.LOG_PATH,
+        dns_example=st.DNS_EXAMPLE_TOKEN,
+    )
 
 
 @admin_app.route("/api/response-templates", methods=["GET"])
 def get_response_templates():
     try:
-        with open('response_templates.json', 'r') as f:
+        with open("response_templates.json", "r") as f:
             templates = json.load(f)
         return jsonify(templates)
     except Exception as e:
@@ -122,12 +126,11 @@ def get_response_templates():
 @admin_app.route("/api/response-template/<template_name>", methods=["GET"])
 def get_response_template(template_name):
     try:
-        with open('response_templates.json', 'r') as f:
+        with open("response_templates.json", "r") as f:
             templates = json.load(f)
         if template_name in templates:
             return jsonify(templates[template_name])
-        else:
-            return jsonify({"error": "Template not found"}), 404
+        return jsonify({"error": "Template not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -136,45 +139,46 @@ def get_response_template(template_name):
 def save_response_designer():
     try:
         data = request.json
-        
-        if not data or not data.get('path'):
+
+        if not data or not data.get("path"):
             return jsonify({"error": "Path is required"}), 400
-            
-        response_id = data.get('response_id', 'unknown')
-        path = data['path'].lstrip('/')
-        
+
+        response_id = data.get("response_id", "unknown")
+        path = data["path"].strip().lstrip("/")
+
         if not path:
-            path = 'response.html'
-            
+            path = "response.html"
+
         full_path = f"design/{path}"
-        
+
         with st.RESPONSE_DESIGNER_LOCK:
             existing = st.RESPONSE_DESIGNER_PATHS.get(full_path)
-            
+            now = datetime.now().isoformat()
+
             st.RESPONSE_DESIGNER_PATHS[full_path] = {
-                'response_id': response_id,
-                'name': data.get('name', 'Untitled Response'),
-                'headers': data.get('headers', ''),
-                'body': data.get('body', ''),
-                'created_at': datetime.now().isoformat(),
-                'updated_at': datetime.now().isoformat()
+                "response_id": response_id,
+                "name": data.get("name", "Untitled Response"),
+                "headers": data.get("headers", ""),
+                "body": data.get("body", ""),
+                "created_at": existing.get("created_at", now) if existing else now,
+                "updated_at": now
             }
-            
+
             if len(st.RESPONSE_DESIGNER_PATHS) > st.MAX_RESPONSE_DESIGNER:
                 sorted_items = sorted(
                     st.RESPONSE_DESIGNER_PATHS.items(),
-                    key=lambda x: x[1]['updated_at']
+                    key=lambda x: x[1]["updated_at"]
                 )
                 for i in range(len(sorted_items) - st.MAX_RESPONSE_DESIGNER + 1):
                     del st.RESPONSE_DESIGNER_PATHS[sorted_items[i][0]]
-        
+
         return jsonify({
             "success": True,
-            "url": f"/{full_path}",
+            "url": f"/{path}",
             "path": full_path,
-            "message": f"Response saved and available at: /{full_path}"
+            "message": f"Response saved and available at: /{path}"
         })
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -184,13 +188,13 @@ def list_response_designer():
     try:
         with st.RESPONSE_DESIGNER_LOCK:
             responses = st.RESPONSE_DESIGNER_PATHS.copy()
-        
+
         return jsonify({
             "success": True,
             "responses": responses,
             "total": len(responses)
         })
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -200,51 +204,52 @@ def debug_response_designer():
     try:
         with st.RESPONSE_DESIGNER_LOCK:
             responses = st.RESPONSE_DESIGNER_PATHS.copy()
-        
+
         debug_info = {}
         for path, data in responses.items():
             debug_info[path] = {
-                'name': data.get('name'),
-                'headers_preview': data.get('headers', '')[:100] + '...' if len(data.get('headers', '')) > 100 else data.get('headers', ''),
-                'headers_length': len(data.get('headers', '')),
-                'body_preview': data.get('body', '')[:100] + '...' if len(data.get('body', '')) > 100 else data.get('body', ''),
-                'body_length': len(data.get('body', '')),
-                'created_at': data.get('created_at'),
-                'updated_at': data.get('updated_at')
+                "name": data.get("name"),
+                "headers_preview": data.get("headers", "")[:100] + ("..." if len(data.get("headers", "")) > 100 else ""),
+                "headers_length": len(data.get("headers", "")),
+                "body_preview": data.get("body", "")[:100] + ("..." if len(data.get("body", "")) > 100 else ""),
+                "body_length": len(data.get("body", "")),
+                "created_at": data.get("created_at"),
+                "updated_at": data.get("updated_at"),
+                "response_id": data.get("response_id")
             }
-        
+
         return jsonify({
             "success": True,
             "stored_responses": debug_info,
-            "total_count": len(responses)
+            "total": len(responses)
         })
-        
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-@admin_app.route("/api/response-designer/delete", methods=["POST"])
-def delete_response_designer():
+@admin_app.route("/api/response-designer/delete/<response_id>", methods=["DELETE"])
+def delete_response_designer(response_id):
     try:
-        data = request.json
-        
-        if not data or not data.get('path'):
-            return jsonify({"error": "Path is required"}), 400
-            
-        path = data['path']
-        if not path.startswith('design/'):
-            path = f"design/{path.lstrip('/')}"
-            
         with st.RESPONSE_DESIGNER_LOCK:
-            if path in st.RESPONSE_DESIGNER_PATHS:
-                del st.RESPONSE_DESIGNER_PATHS[path]
-                return jsonify({
-                    "success": True,
-                    "message": f"Response {path} deleted successfully"
-                })
-            else:
+            target_key = None
+
+            for path, data in st.RESPONSE_DESIGNER_PATHS.items():
+                if data.get("response_id") == response_id:
+                    target_key = path
+                    break
+
+            if not target_key:
                 return jsonify({"error": "Response not found"}), 404
-                
+
+            deleted = st.RESPONSE_DESIGNER_PATHS.pop(target_key)
+
+        return jsonify({
+            "success": True,
+            "path": target_key,
+            "name": deleted.get("name", "Untitled Response")
+        })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -259,13 +264,12 @@ def start_admin_server(port: int):
     except OSError as e:
         print(f"[!] Could not bind admin port {port}: {e}")
         return
-    
-    # Register the log UI route dynamically
+
     def serve_logs_ui():
         return render_template("logs_ui.html", log_path=st.LOG_PATH, dns_example=st.DNS_EXAMPLE_TOKEN)
-    
+
     admin_app.add_url_rule(f"/{st.LOG_PATH}", view_func=serve_logs_ui, methods=["GET"])
-    
+
     import threading
     t = threading.Thread(target=srv.serve_forever, daemon=True)
     t.start()
